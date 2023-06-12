@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide.init
 import com.example.travelday_2.databinding.DateListRowBinding
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -27,9 +28,18 @@ class DateListAdapter(val context: Context, val items: ArrayList<SharedViewModel
     inner class ViewHolder(val binding: DateListRowBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SharedViewModel.Date) {
-            val adapter =DailyScheduleAdapter(item.dailyScheduleList)
-            binding.innerRecyclerview.adapter = adapter
             binding.innerRecyclerview.layoutManager = LinearLayoutManager(context)
+
+            val adapter =DailyScheduleAdapter(item.dailyScheduleList)
+            adapter.itemClickListener = object:DailyScheduleAdapter.OnItemClickListener {
+                override fun OnItemClick(data: SharedViewModel.DailySchedule) {
+                    adapter.removeItem(adapterPosition)
+                }
+            }
+
+             binding.innerRecyclerview.adapter = adapter
+
+
         }
         init {
             binding.addButtonNew.setOnClickListener {
@@ -43,7 +53,7 @@ class DateListAdapter(val context: Context, val items: ArrayList<SharedViewModel
         items.add(newPos,item)
         notifyItemMoved(oldPos, newPos)
     }
-    fun removeItem(pos:Int){
+    fun removeItem(pos: Int){
         items.removeAt(pos)
         notifyItemRemoved(pos)
     }
