@@ -2,34 +2,30 @@ package com.example.travelday_2
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
+import android.provider.ContactsContract.CommonDataKinds.Im
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
-import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.bumptech.glide.Glide
 import com.example.travelday_2.databinding.FragmentDateListBinding
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
 
 
 class DateListFragment : Fragment() {
@@ -38,12 +34,17 @@ class DateListFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by activityViewModels()
     lateinit var result :String
     val scope = CoroutineScope(Dispatchers.IO)
+    lateinit var icon:ImageView
+    lateinit var weatherre:TextView
+    lateinit var imgURL:String
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
         binding= FragmentDateListBinding.inflate(layoutInflater)
+        icon = inflater.inflate(R.layout.weather_dlg, container, false).findViewById<ImageView>(R.id.weatherIcon!!)
+        weatherre = inflater.inflate(R.layout.weather_dlg, container, false).findViewById<TextView>(R.id.weahterResult!!)
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -99,13 +100,16 @@ class DateListFragment : Fragment() {
                 val weatherObj = weatherJson.getJSONObject(0)
 
                 var weather = weatherObj.getString("description")
-                //val imgURL = "http://openweathermap.org/img/w/" + weatherObj.getString("icon") + ".png"
-                //Glide.with(this).load(imgURL).into(findViewById<ImageView>(R.id.weatherIcon))
+                imgURL = "http://openweathermap.org/img/w/" + weatherObj.getString("icon") + ".png"
+                //Glide.with(this).load(imgURL).into(icon)
+
                 val tempK = JSONObject(jsonObject.getString("main"))
                 val tempDo = (Math.round((tempK.getDouble("temp")-273.15)*100)/100.0)
-                weather = weather + tempDo + "°C"
+                result = tempDo.toString() +"°C\n"+weather
+
                 //binding.result.text = weather
-                result = weather
+
+                weatherre.text = result
 
             },
             {
@@ -123,17 +127,29 @@ class DateListFragment : Fragment() {
 
         val country = arguments?.getSerializable("클릭된 국가") as SharedViewModel.Country
 
-        val dialogBuilder = AlertDialog.Builder(requireContext())
+        var dlg = Dialog(requireContext())
+        dlg.setContentView(R.layout.weather_dlg)
 
-            .setTitle(country.name)
-            .setMessage(result)
-            .setPositiveButton("확인", null)
-            .setNegativeButton("취소") { dialog, _ ->
-                dialog.cancel()
-            }
+        var tv = dlg.findViewById<TextView>(R.id.weahterResult)
+        var iv = dlg.findViewById<ImageView>(R.id.weatherIcon)
+        var n = dlg.findViewById<TextView>(R.id.counName)
+        n.text = country.name
+        tv.text = result
+        Glide.with(this).load(imgURL).into(iv)
+        dlg.show()
 
-        val dialog = dialogBuilder.create()
-        dialog.show()
+//        val dialogBuilder = AlertDialog.Builder(requireContext())
+//
+//            .setTitle(country.name)
+//            .setMessage(weatherre.text)
+//
+//            .setPositiveButton("확인", null)
+//            .setNegativeButton("취소") { dialog, _ ->
+//                dialog.cancel()
+//            }
+//
+//        val dialog = dialogBuilder.create()
+//        dialog.show()
 
 
 

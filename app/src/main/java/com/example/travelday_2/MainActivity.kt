@@ -36,5 +36,6 @@ class MainActivity : AppCompatActivity() {
         binding.tabLayout.getTabAt(0)?.setIcon(R.drawable.checklist)
         binding.tabLayout.getTabAt(1)?.setIcon(R.drawable.calendar)
         binding.tabLayout.getTabAt(2)?.setIcon(R.drawable.community)
+
         binding.viewPager2.setCurrentItem(1, true)
     }}
