@@ -164,6 +164,15 @@ class DateListFragment : Fragment() {
                             commit()
                         }
                     }
+
+                    override fun onOutfitClick(data: SharedViewModel.Date) {
+                        val fragment = OutfitFragment()
+                        val fragmentManager = parentFragmentManager
+                        val fragmentTransaction = fragmentManager.beginTransaction()
+                        fragmentTransaction.replace(R.id.frag_container, fragment)
+                        fragmentTransaction.addToBackStack(null)
+                        fragmentTransaction.commit()
+                    }
                 }
         //상단 탭에 국가이름, 날짜 데이터 및 디데이 표시
         val startDate = country.dateList.firstOrNull()?.date
