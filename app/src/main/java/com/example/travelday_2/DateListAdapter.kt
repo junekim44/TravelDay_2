@@ -28,7 +28,7 @@ class DateListAdapter(val context: Context, val items: ArrayList<SharedViewModel
     }
     var itemClickListener: OnItemClickListener? = null
 
-    inner class ViewHolder(val binding: DateListRowBinding) :
+    inner class ViewHolder(val binding: com.example.travelday_2.databinding.DateListRowBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: SharedViewModel.Date) {
             binding.innerRecyclerview.layoutManager = LinearLayoutManager(context)

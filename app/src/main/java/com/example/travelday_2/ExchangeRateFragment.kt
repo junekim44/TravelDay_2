@@ -1,7 +1,9 @@
 package com.example.travelday_2
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -13,16 +15,27 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.bumptech.glide.Glide
 import com.example.travelday_2.databinding.FragmentDateListBinding
 import com.example.travelday_2.databinding.FragmentExchangeRateBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.ExecutionException
 
 
 class ExchangeRateFragment : Fragment() {
-
+    lateinit var result :String
+    val scope = CoroutineScope(Dispatchers.IO)
+    lateinit var icon:ImageView
+    lateinit var weatherre:TextView
+    lateinit var imgURL:String
     lateinit var binding:FragmentExchangeRateBinding
     private val currencyList = arrayOf("KRW", "USD", "EUR", "CAD")
     private lateinit var et_from: TextView
@@ -40,6 +53,8 @@ class ExchangeRateFragment : Fragment() {
     ): View? {
 
         binding= FragmentExchangeRateBinding.inflate(layoutInflater)
+        icon = inflater.inflate(R.layout.weather_dlg, container, false).findViewById<ImageView>(R.id.weatherIcon!!)
+        weatherre = inflater.inflate(R.layout.weather_dlg, container, false).findViewById<TextView>(R.id.weahterResult!!)
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,6 +69,13 @@ class ExchangeRateFragment : Fragment() {
     }
 
     private fun init(){
+        result  = "weather"
+        getWeather()
+        binding.weatherLayout.setOnClickListener {
+
+
+            showWeatherDialog()
+        }
         val selectedCountry = arguments?.getSerializable("클릭된 국가") as SharedViewModel.Country
         //val selectedDate = arguments?.getSerializable("클릭된 날짜") as SharedViewModel.Date
         val startDate = selectedCountry.dateList.firstOrNull()?.date
@@ -65,12 +87,7 @@ class ExchangeRateFragment : Fragment() {
         }
         binding.travelData.text=selectedCountry.name +"\n " +travelPeriod
         binding.dDayDateList.text="D-"+selectedCountry.dDay
-        binding.weatherLayout.setOnClickListener {
 
-        }
-        binding.exchangeLayout.setOnClickListener {
-
-        }
 
         val spinner = binding.spinner
         val spinner2 = binding.spinner2
@@ -125,6 +142,77 @@ class ExchangeRateFragment : Fragment() {
 
         }
     }
+
+    private fun getWeather(){
+        val country = arguments?.getSerializable("클릭된 국가") as SharedViewModel.Country
+        val requestQueue = Volley.newRequestQueue(requireContext())
+        val url = "http://api.openweathermap.org/data/2.5/weather?q="+country.name+"&appid="+"d74c3bbee7a3c497383271ff0d494542"
+
+        val stringRequest = StringRequest(
+            Request.Method.GET,url,
+            {
+                    response ->
+                val jsonObject = JSONObject(response)
+
+                val weatherJson = jsonObject.getJSONArray("weather")
+                val weatherObj = weatherJson.getJSONObject(0)
+
+                var weather = weatherObj.getString("description")
+                imgURL = "http://openweathermap.org/img/w/" + weatherObj.getString("icon") + ".png"
+                //Glide.with(this).load(imgURL).into(icon)
+
+                val tempK = JSONObject(jsonObject.getString("main"))
+                val tempDo = (Math.round((tempK.getDouble("temp")-273.15)*100)/100.0)
+                result = tempDo.toString() +"°C\n"+weather
+
+                //binding.result.text = weather
+
+                weatherre.text = result
+
+            },
+            {
+                Log.i("weahter",it.message.toString())
+                result = "error"
+            })
+
+        requestQueue.add(stringRequest)
+    }
+
+    //weather dialog
+    private fun showWeatherDialog() {
+        getWeather()
+        //val dialogView = LayoutInflater.from(context).inflate(R.layout.fragment_date_list, null)
+
+        val country = arguments?.getSerializable("클릭된 국가") as SharedViewModel.Country
+
+        var dlg = Dialog(requireContext())
+        dlg.setContentView(R.layout.weather_dlg)
+
+        var tv = dlg.findViewById<TextView>(R.id.weahterResult)
+        var iv = dlg.findViewById<ImageView>(R.id.weatherIcon)
+        var n = dlg.findViewById<TextView>(R.id.counName)
+        n.text = country.name
+        tv.text = result
+        Glide.with(this).load(imgURL).into(iv)
+        dlg.show()
+
+//        val dialogBuilder = AlertDialog.Builder(requireContext())
+//
+//            .setTitle(country.name)
+//            .setMessage(weatherre.text)
+//
+//            .setPositiveButton("확인", null)
+//            .setNegativeButton("취소") { dialog, _ ->
+//                dialog.cancel()
+//            }
+//
+//        val dialog = dialogBuilder.create()
+//        dialog.show()
+
+
+
+    }
+
 
     // 뒤로가기 버튼이 눌렸을 때 처리할 동작 구현
     private fun initBackStack() {
